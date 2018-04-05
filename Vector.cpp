@@ -42,12 +42,12 @@ Vector Vector::scalar(double scalar) {
     return Vector(x*scalar, y*scalar, z*scalar);
 }
 
-Vector& Vector::operator+ (const Vector& rhs) {
+Vector Vector::operator+ (const Vector& rhs) {
     x += rhs.x; y += rhs.y; z += rhs.z;
     return (*this);
 }
 
-Vector& Vector::operator- (const Vector& rhs) {
+Vector Vector::operator- (const Vector& rhs) {
     x -= rhs.x; y -= rhs.y; z -= rhs.z;
     return (*this);
 }
@@ -90,4 +90,8 @@ void Vector::setZ(double z) {
 
 Vector Vector::negative() {
     return Vector(-x, -y, -z);
+}
+
+Vector Vector::multiply(Vector v) {
+    return Vector(x*v.getX(), y*v.getY(), z*v.getZ());
 }

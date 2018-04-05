@@ -17,7 +17,8 @@ public:
 
     Geometric_Object();
 
-    virtual Colour getColor () {}
+    virtual Colour getColour();
+
     virtual Vector getNormalAt(Vector intersection_position);
     virtual double findIntersection(Ray ray);
 };

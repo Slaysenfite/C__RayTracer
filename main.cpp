@@ -5,90 +5,28 @@
 #include <iostream>
 #include <cmath>
 #include <ctime>
+#include <vector>
 
 #include "Vector.h"
 #include "Camera.h"
 #include "Colour.h"
 #include "Light.h"
 #include "Sphere.h"
+#include "Plane.h"
+#include "RGBType.h"
+#include "Utilities.h"
 
 using namespace std;
 
-struct RGBType{
-    double r, g, b;
-};
-
-void saveBitmapImage(const char *filename, int w, int h, int dpi, RGBType *data){
-    FILE *f;
-    int k = w*h;
-    int s = 4*k;
-    int filesize = 54 + s;
-
-    double factor = 39.375;
-    int m = static_cast<int>(factor);
-
-    int ppm = dpi*m;
-
-    unsigned char bmpfileheader[14] = {'B','M', 0,0,0,0, 0,0,0,0, 54,0,0,0};
-    unsigned char bmpinfoheader[40] = {40,0,0,0, 0,0,0,0, 0,0,0,0, 1,0,24,0};
-
-    bmpfileheader[ 2] = (unsigned char)(filesize);
-    bmpfileheader[ 3] = (unsigned char)(filesize>>8);
-    bmpfileheader[ 4] = (unsigned char)(filesize>>16);
-    bmpfileheader[ 5] = (unsigned char)(filesize>>24);
-
-    bmpinfoheader[ 4] = (unsigned char)(w);
-    bmpinfoheader[ 5] = (unsigned char)(w>>8);
-    bmpinfoheader[ 6] = (unsigned char)(w>>16);
-    bmpinfoheader[ 7] = (unsigned char)(w>>24);
-
-    bmpinfoheader[ 8] = (unsigned char)(h);
-    bmpinfoheader[ 9] = (unsigned char)(h>>8);
-    bmpinfoheader[10] = (unsigned char)(h>>16);
-    bmpinfoheader[11] = (unsigned char)(h>>24);
-
-    bmpinfoheader[21] = (unsigned char)(s);
-    bmpinfoheader[22] = (unsigned char)(s>>8);
-    bmpinfoheader[23] = (unsigned char)(s>>16);
-    bmpinfoheader[24] = (unsigned char)(s>>24);
-
-    bmpinfoheader[25] = (unsigned char)(ppm);
-    bmpinfoheader[26] = (unsigned char)(ppm>>8);
-    bmpinfoheader[27] = (unsigned char)(ppm>>16);
-    bmpinfoheader[28] = (unsigned char)(ppm>>24);
-
-    bmpinfoheader[29] = (unsigned char)(ppm);
-    bmpinfoheader[30] = (unsigned char)(ppm>>8);
-    bmpinfoheader[31] = (unsigned char)(ppm>>16);
-    bmpinfoheader[32] = (unsigned char)(ppm>>24);
-
-    f = fopen(filename,"wb");
-
-    fwrite(bmpfileheader,1,14,f);
-    fwrite(bmpinfoheader,1,40,f);
-
-    for (int i = 0; i < k; i++) {
-        RGBType rgb = data[i];
-
-        double red = (data[i].r)*255;
-        double green = (data[i].g)*255;
-        double blue = (data[i].b)*255;
-
-        unsigned char color[3] = {(int)floor(blue),(int)floor(green),(int)floor(red)};
-
-        fwrite(color,1,3,f);
-    }
-
-    fclose(f);
-}
-
 int main() {
     int var;
+    Utilities util = Utilities();
 
     cout << "Rendering image...please wait indefinitely" << endl;
 
     int width = 640;
     int height = 480;
+    double aspectRatio = (double)width/(double)height;
     int pixelNum = width*height;
 
     int dpi = 72;
@@ -121,19 +59,54 @@ int main() {
     Light lighting = Light(lightPos, light_greenish);
 
     //Objects
-    Sphere scene_object1 = Sphere(O, 1, light_bloodred);
+    Plane scene_object1 = Plane(Y, -1, light_black);
+    Sphere scene_object2 = Sphere(O, 1, light_bloodred);
+
+    vector<Geometric_Object*> scene_objects;
+    scene_objects.push_back(dynamic_cast<Geometric_Object*>(&scene_object1));
+    scene_objects.push_back(dynamic_cast<Geometric_Object*>(&scene_object2));
+
+    double xOffset, yOffset;
 
     const long double sysTimeStart = time(0);
     for(int x = 0; x < width; x++){
         for(int y = 0; y < height; y++){
+
             var = x + y*width;
-            pixels[var].r = 34;
+
+            //No anti aliasing
+            if(width > height){
+                xOffset = ((x + 0.5)/width)*aspectRatio - (((width - height)/(double)height)/2);
+                yOffset = ((height - y) + 0.5)/height;
+            }
+            else if (height > width){
+                xOffset = (x + 0.5)/ width;
+                yOffset = (((height - y) + 0.5)/height)/aspectRatio - (((height - width)/(double)width)/2);
+            }
+			else if (width == height){
+                xOffset = (x + 0.5)/width;
+                yOffset = ((height - y) + 0.5)/height;
+			}
+
+            Vector rayOrigin = c.getCameraPosition(); //rays originate from camera position
+            Vector rayDirection = cDir+(cRight*(xOffset - 0.5))+(cDown*(yOffset - 0.5)).normalized();
+
+            Ray ray = Ray(rayOrigin, rayDirection);
+
+            vector<double> intersections;
+
+            for(int i = 0; i < scene_objects.size(); i++)
+                intersections.push_back(scene_objects.at(i)->findIntersection(ray));
+
+            int winningIndex = util.winningObjectIndex(intersections);;
+
+            pixels[var].r = 134;
             pixels[var].g = 165;
-            pixels[var].b = 234;
+            pixels[var].b = 98;
         }
     }
 
-    saveBitmapImage("RayTracedImage.bmp", width, height, dpi, pixels);
+    util.saveBitmapImage("RayTracedImage.bmp", width, height, dpi, pixels);
 
     const long double sysTimeEnd = time(0);
     long double sysTimeTotal = sysTimeEnd - sysTimeStart;

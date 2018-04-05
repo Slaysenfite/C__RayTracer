@@ -19,13 +19,14 @@ public:
     double magnitude();
     Vector negative();
     Vector normalized();
+    Vector multiply(Vector v);
     Vector scalar(double scalar);
 
     double dot(Vector v);
     Vector cross(Vector v);
 
-    Vector& operator+ (const Vector& rhs);
-    Vector& operator- (const Vector& rhs);
+    Vector operator+ (const Vector& rhs);
+    Vector operator- (const Vector& rhs);
     Vector operator*(const double scalar); //scalar multiplication
     double operator* (const Vector& rhs); //dot product
     Vector operator^ (const Vector& rhs); //cross product
