@@ -24,10 +24,10 @@ public:
     void setBlue(double blue);
     void setSpecial(double special);
 
-    Colour& operator+ (const Colour& rhs);
-    Colour& operator- (const Colour& rhs);
-    Colour operator*(const double scalar); //scalar multiplication
-    Colour operator*(const Colour& rhs); //colour multiplication
+    Colour scalar(double scalar);
+    Colour add(Colour c);
+    Colour subtract(Colour c);
+    Colour multiply(Colour c);
 
     Colour average(Colour c);
     double brightness();

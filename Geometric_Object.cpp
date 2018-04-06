@@ -6,7 +6,7 @@
 Geometric_Object::Geometric_Object() {}
 
 Vector Geometric_Object::getNormalAt(Vector intersection_position) {
-    return Vector();
+    return Vector(0, 0, 0);
 }
 
 double Geometric_Object::findIntersection(Ray ray) {

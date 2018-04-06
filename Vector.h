@@ -6,6 +6,7 @@
 #define C_RAYTRACER_VECTOR_H
 
 #include <iostream>
+#include <cmath>
 
 using namespace std;
 
@@ -19,17 +20,11 @@ public:
     double magnitude();
     Vector negative();
     Vector normalized();
-    Vector multiply(Vector v);
     Vector scalar(double scalar);
-
     double dot(Vector v);
     Vector cross(Vector v);
-
-    Vector operator+ (const Vector& rhs);
-    Vector operator- (const Vector& rhs);
-    Vector operator*(const double scalar); //scalar multiplication
-    double operator* (const Vector& rhs); //dot product
-    Vector operator^ (const Vector& rhs); //cross product
+    Vector add(Vector v);
+    Vector subtract(Vector v);
 
     double getX() const;
     double getY() const;
@@ -38,6 +33,7 @@ public:
     void setX(double x);
     void setY(double y);
     void setZ(double z);
+
 private:
     double x, y, z;
 };

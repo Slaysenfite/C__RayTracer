@@ -4,19 +4,19 @@
 
 #include "Camera.h"
 
-const Vector &Camera::getCameraPosition() const {
+Vector Camera::getCameraPosition() {
     return cameraPosition;
 }
 
-const Vector &Camera::getCameraDirection() const {
+Vector Camera::getCameraDirection() {
     return cameraDirection;
 }
 
-const Vector &Camera::getCameraRight() const {
+Vector Camera::getCameraRight() {
     return cameraRight;
 }
 
-const Vector &Camera::getCameraDown() const {
+Vector Camera::getCameraDown() {
     return cameraDown;
 }
 

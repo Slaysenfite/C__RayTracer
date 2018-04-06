@@ -16,10 +16,8 @@ public:
     Ray(Vector o, Vector d);
     ~Ray();
 
-    const Vector &getOrigin() const;
-    void setOrigin(const Vector &origin);
-    const Vector &getDirection() const;
-    void setDirection(const Vector &direction);
+    Vector getOrigin();
+    Vector getDirection();
 
 private:
     Vector origin, direction;

@@ -17,8 +17,8 @@ public:
     Light();
     Light(Vector pos, Colour col);
 
-    virtual Vector &getPosition();
-    virtual Colour &getColour();
+    virtual Vector getPosition();
+    virtual Colour getColour();
 
 private:
     Vector position;

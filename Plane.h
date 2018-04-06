@@ -13,17 +13,17 @@
 
 using namespace std;
 
-class Plane : public Geometric_Object{
+class Plane : public Geometric_Object {
 public:
     Plane();
     Plane(Vector n, double dfo, Colour c);
 
-    const Vector &getNormal() const;
-    double getDistanceFromOrigin() const;
-    const Colour &getColour() const;
+    Vector getNormal();
+    double getDistanceFromOrigin();
+    virtual Colour getColour();
 
     Vector getNormalVectorAt(Vector point);
-    double findIntersection(Ray ray);
+    virtual double findIntersection(Ray ray);
 
 private:
     Vector normal;

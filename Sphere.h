@@ -17,7 +17,7 @@ public:
     Sphere();
     Sphere(Vector v, double r, Colour c);
 
-    double findIntersection(Ray ray);
+    virtual double findIntersection(Ray ray);
     Vector getNormalAt(Vector position);
 
     Vector getCenter();

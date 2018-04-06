@@ -4,12 +4,13 @@
 
 #include <cmath>
 #include "Utilities.h"
+#include "Triangle.h"
 
 void Utilities::saveBitmapImage(const char *filename, int w, int h, int dpi, RGBType *data) {
     FILE *f;
     int k = w*h;
     int s = 4*k;
-    int filesize = 54 + s;
+    int fileSize = 54 + s;
 
     double factor = 39.375;
     int m = static_cast<int>(factor);
@@ -19,10 +20,10 @@ void Utilities::saveBitmapImage(const char *filename, int w, int h, int dpi, RGB
     unsigned char bmpfileheader[14] = {'B','M', 0,0,0,0, 0,0,0,0, 54,0,0,0};
     unsigned char bmpinfoheader[40] = {40,0,0,0, 0,0,0,0, 0,0,0,0, 1,0,24,0};
 
-    bmpfileheader[ 2] = (unsigned char)(filesize);
-    bmpfileheader[ 3] = (unsigned char)(filesize>>8);
-    bmpfileheader[ 4] = (unsigned char)(filesize>>16);
-    bmpfileheader[ 5] = (unsigned char)(filesize>>24);
+    bmpfileheader[ 2] = (unsigned char)(fileSize);
+    bmpfileheader[ 3] = (unsigned char)(fileSize>>8);
+    bmpfileheader[ 4] = (unsigned char)(fileSize>>16);
+    bmpfileheader[ 5] = (unsigned char)(fileSize>>24);
 
     bmpinfoheader[ 4] = (unsigned char)(w);
     bmpinfoheader[ 5] = (unsigned char)(w>>8);
@@ -70,5 +71,66 @@ void Utilities::saveBitmapImage(const char *filename, int w, int h, int dpi, RGB
 }
 
 int Utilities::winningObjectIndex(vector<double> intersections) {
-    return 0;
+    int iMin; //index of winning object
+
+    if(intersections.size() == 0) return -1; //if no intersections occur
+    else if(intersections.size() == 1){
+        if(intersections.at(0) > 0) return 0; //returns index 0
+        else return -1;
+    }
+    else{ //for multiple intersections, the maximum values must first be found
+
+        double max = intersections.at(0);
+        for(int c = 1; c < intersections.size(); c++){
+            if(max < intersections.at(c))
+                max = intersections.at(c);
+        }
+
+        if(max > 0){
+            for(int d = 0; d < intersections.size(); d++){
+                if (intersections.at(d) > 0 && intersections.at(d) <= max) {
+                    max = intersections.at(d);
+                    iMin = d;
+                }
+            }
+            return iMin;
+        }
+        else return -1;
+    }
+}
+
+Colour Utilities::getColorAt(Vector intersection_position, Vector intersecting_ray_direction,
+                             vector<Geometric_Object *> scene_objects, int index_of_winning_object,
+                             vector<Light_Source *> light_sources, double accuracy, double ambientlight) {
+    return Colour();
+}
+
+void Utilities::createPolygon(Vector c1, Vector c2, Colour colour, vector<Geometric_Object*> scene_objects) {
+    Vector A = Vector(c2.getX(), c1.getY(), c1.getZ());
+    Vector B = Vector(c2.getX(), c1.getY(), c2.getZ());
+    Vector C = Vector(c1.getX(), c1.getY(), c2.getZ());
+
+    Vector D = Vector(c2.getX(), c2.getY(), c1.getZ());
+    Vector E = Vector(c1.getX(), c2.getY(), c1.getZ());
+    Vector F = Vector(c1.getX(), c2.getY(), c2.getZ());
+
+    //Left
+    scene_objects.push_back(new Triangle (D, A, c1, colour));
+    scene_objects.push_back(new Triangle (c1, E, D, colour));
+    //Back
+    scene_objects.push_back(new Triangle (c2, B, A, colour));
+    scene_objects.push_back(new Triangle (A, D, c2, colour));
+    //Right
+    scene_objects.push_back(new Triangle (F, C, B, colour));
+    scene_objects.push_back(new Triangle (B, c2, F, colour));
+    //Front
+    scene_objects.push_back(new Triangle (E, c1, C, colour));
+    scene_objects.push_back(new Triangle (C, F, E, colour));
+    //Top
+    scene_objects.push_back(new Triangle (D, E, F, colour));
+    scene_objects.push_back(new Triangle (F, c2, D, colour));
+    //Bottom
+    scene_objects.push_back(new Triangle (c1, A, B, colour));
+    scene_objects.push_back(new Triangle (B, C, c1, colour));;
+
 }

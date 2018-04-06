@@ -14,10 +14,10 @@ public:
     Camera();
     Camera (Vector cPos, Vector cDir, Vector cRight, Vector cDown);
 
-    const Vector &getCameraPosition() const;
-    const Vector &getCameraDirection() const;
-    const Vector &getCameraRight() const;
-    const Vector &getCameraDown() const;
+    Vector getCameraPosition();
+    Vector getCameraDirection();
+    Vector getCameraRight();
+    Vector getCameraDown();
 
 private:
     Vector cameraPosition, cameraDirection, cameraRight, cameraDown;

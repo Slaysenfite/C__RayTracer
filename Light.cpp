@@ -14,11 +14,11 @@ Light::Light(Vector pos, Colour col) {
     colour = col;
 }
 
-Vector &Light::getPosition() {
+Vector Light::getPosition() {
     return position;
 }
 
-Colour &Light::getColour() {
+Colour Light::getColour() {
     return colour;
 }
 

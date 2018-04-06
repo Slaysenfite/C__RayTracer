@@ -16,15 +16,15 @@ Plane::Plane(Vector n, double dfo, Colour c) {
     colour = c;
 }
 
-const Vector &Plane::getNormal() const {
+Vector Plane::getNormal() {
     return normal;
 }
 
-double Plane::getDistanceFromOrigin() const {
+double Plane::getDistanceFromOrigin() {
     return distanceFromOrigin;
 }
 
-const Colour &Plane::getColour() const {
+Colour Plane::getColour() {
     return colour;
 }
 
@@ -34,15 +34,14 @@ Vector Plane::getNormalVectorAt(Vector point) {
 
 double Plane::findIntersection(Ray ray) {
     Vector rayDirection = ray.getDirection();
-    double a = rayDirection*normal;
+    double a = rayDirection.dot(normal);
     if(a == 0){
         //parallel ray
         return -1;
     }
     else{
-        Vector v1 = (normal*distanceFromOrigin).negative();
-        Vector v2 = v1+ray.getOrigin();
-        double b = normal*v2;
+        double b = normal.dot(ray.getOrigin().add(normal.scalar(distanceFromOrigin).negative()));
         return -1*b/a;
     }
 }
+

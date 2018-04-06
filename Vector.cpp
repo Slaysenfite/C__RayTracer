@@ -42,28 +42,17 @@ Vector Vector::scalar(double scalar) {
     return Vector(x*scalar, y*scalar, z*scalar);
 }
 
-Vector Vector::operator+ (const Vector& rhs) {
-    x += rhs.x; y += rhs.y; z += rhs.z;
-    return (*this);
+Vector Vector::negative() {
+    return Vector(-x, -y, -z);
 }
 
-Vector Vector::operator- (const Vector& rhs) {
-    x -= rhs.x; y -= rhs.y; z -= rhs.z;
-    return (*this);
+Vector Vector::add(Vector v) {
+    return Vector(x+v.getX(), y+v.getY(), z+v.getZ());
 }
 
-Vector Vector::operator*(const double scalar) {
-    return Vector(x*scalar, y*scalar, z*scalar);
+Vector Vector::subtract(Vector v) {
+    return Vector(x-v.getX(), y-v.getY(), z-v.getZ());
 }
-
-double Vector::operator*(const Vector &v) {
-    return x*v.getX() + y*v.getY() + z*v.getZ();
-}
-
-Vector Vector::operator^(const Vector &v) {
-    return Vector(y*v.getZ() - z*v.getY(), z*v.getX() - x*v.getZ(), x*v.getY() - y*v.getX());
-}
-
 double Vector::getX() const {
     return x;
 }
@@ -88,10 +77,3 @@ void Vector::setZ(double z) {
     Vector::z = z;
 }
 
-Vector Vector::negative() {
-    return Vector(-x, -y, -z);
-}
-
-Vector Vector::multiply(Vector v) {
-    return Vector(x*v.getX(), y*v.getY(), z*v.getZ());
-}

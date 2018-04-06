@@ -6,9 +6,9 @@
 #include "Sphere.h"
 
 Sphere::Sphere() {
-    center = Vector();
-    radius = 1;
-    colour = Colour(0.5, 0.5, 1, 0);
+    center = Vector(0, 0, 0);
+    radius = 1.0;
+    colour = Colour(0.5, 0.5, 0.5, 0);
 }
 
 Sphere::Sphere(Vector v, double r, Colour c) {
@@ -55,7 +55,7 @@ double Sphere::findIntersection(Ray ray) {
     double c = pow(xROrigin - xSCenter, 2)
             + pow(yROrigin - ySCenter, 2)
             + pow(zROrigin - zSCenter, 2)
-            - pow(radius, 2);
+            - (radius*radius);
 
     double discriminant = b*b - 4*c;
 
@@ -69,6 +69,7 @@ double Sphere::findIntersection(Ray ray) {
 }
 
 Vector Sphere::getNormalAt(Vector position) {
-    return position+center.negative().normalized();
+    Vector normalToPosition = position.add(center.negative()).normalized();
+    return normalToPosition;
 }
 

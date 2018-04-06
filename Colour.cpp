@@ -49,28 +49,6 @@ void Colour::setSpecial(double special) {
     Colour::special = special;
 }
 
-Colour &Colour::operator+(const Colour &rhs) {
-    red += rhs.getRed();
-    green += rhs.getGreen();
-    blue += rhs.getBlue();
-    return (*this);
-}
-
-Colour &Colour::operator-(const Colour &rhs) {
-    red -= rhs.getRed();
-    green -= rhs.getGreen();
-    blue -= rhs.getBlue();
-    return (*this);
-}
-
-Colour Colour::operator*(const double scalar) {
-    return Colour(red*scalar, green*scalar,blue*scalar, special);
-}
-
-Colour Colour::operator*(const Colour &rhs) {
-    return Colour(red*rhs.getRed(), green*rhs.getGreen(), blue*rhs.getBlue(), special);
-}
-
 Colour Colour::average(Colour c) {
     return Colour((red + c.getRed())/2,
             (green + c.getGreen())/2,
@@ -80,9 +58,39 @@ Colour Colour::average(Colour c) {
 }
 
 double Colour::brightness() {
-    return 0;
+    return (red + green + blue)/3;
 }
 
 Colour Colour::clip() {
-    return Colour();
+    double totalLight = red + green + blue;
+    double excessLight = totalLight - 3;
+    if(excessLight > 0){
+        red = red + excessLight * (red/totalLight);
+        green = green + excessLight * (green/totalLight);
+        blue = blue + excessLight * (blue/totalLight);
+    }
+    if(red > 1) red = 1;
+    if(green > 1) green = 1;
+    if(blue > 1) blue = 1;
+    if(red < 0) red = 0;
+    if(green < 0) green = 0;
+    if(blue < 0) blue = 0;
+
+    return Colour(red, green, blue, special);
+}
+
+Colour Colour::scalar(double scalar) {
+    return Colour(red*scalar, green*scalar, blue*scalar, special);
+}
+
+Colour Colour::add(Colour c) {
+    return Colour(red + c.getRed(), green + c.getGreen(), blue + c.getBlue(), special);
+}
+
+Colour Colour::subtract(Colour c) {
+    return Colour(red - c.getRed(), green - c.getGreen(), blue - c.getBlue(), special);
+}
+
+Colour Colour::multiply(Colour c) {
+    return Colour(red * c.getRed(), green * c.getGreen(), blue * c.getBlue(), special);
 }
