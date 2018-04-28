@@ -7,15 +7,17 @@
 
 #include <iostream>
 #include <vector>
-#include "RGBType.h"
-#include "Light_Source.h"
-#include "Geometric_Object.h"
+#include "../Tracing_Utilities/RGBType.h"
+#include "../Tracing_Utilities/Light_Source.h"
+#include "../Geometry_Utilities/Geometric_Object.h"
 
 using namespace std;
 
 class Utilities {
 public:
     const int NO_INTERSECTION = -1;
+    const double ACCURACY_CHECK = 0.00000001;
+    const double AMBIENT_LIGHT = 0.2;
 
     static void saveBitmapImage(const char *filename, int w, int h, int dpi, RGBType *data);
     static int winningObjectIndex(vector<double> intersections);

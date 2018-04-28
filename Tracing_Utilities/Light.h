@@ -6,12 +6,13 @@
 #define C_RAYTRACER_LIGHT_H
 
 #include <iostream>
-#include "Vector.h"
+#include "../Math_Utilities/Vector.h"
 #include "Colour.h"
+#include "Light_Source.h"
 
 using namespace std;
 
-class Light {
+class Light : public Light_Source{
 
 public:
     Light();

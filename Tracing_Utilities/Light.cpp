@@ -5,7 +5,7 @@
 #include "Light.h"
 
 Light::Light() {
-    position = Vector();
+    position = Vector(0, 0, 0);
     colour = Colour(1, 1, 1, 0);
 }
 

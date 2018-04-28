@@ -7,7 +7,7 @@
 
 #include <iostream>
 #include "Colour.h"
-#include "Vector.h"
+#include "../Math_Utilities/Vector.h"
 
 using namespace std;
 

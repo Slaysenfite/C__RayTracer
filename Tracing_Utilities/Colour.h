@@ -14,10 +14,10 @@ public:
     Colour();
     Colour(double r, double g, double b, double s);
 
-    double getRed() const;
-    double getGreen() const;
-    double getBlue() const;
-    double getSpecial() const;
+    double getRed();
+    double getGreen();
+    double getBlue();
+    double getSpecial();
 
     void setRed(double red);
     void setGreen(double green);

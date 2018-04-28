@@ -17,19 +17,19 @@ Colour::Colour(double r, double g, double b, double s) {
     special = s;
 }
 
-double Colour::getRed() const {
+double Colour::getRed() {
     return red;
 }
 
-double Colour::getGreen() const {
+double Colour::getGreen() {
     return green;
 }
 
-double Colour::getBlue() const {
+double Colour::getBlue() {
     return blue;
 }
 
-double Colour::getSpecial() const {
+double Colour::getSpecial() {
     return special;
 }
 
@@ -92,5 +92,5 @@ Colour Colour::subtract(Colour c) {
 }
 
 Colour Colour::multiply(Colour c) {
-    return Colour(red * c.getRed(), green * c.getGreen(), blue * c.getBlue(), special);
+    return Colour(red*c.getRed(), green*c.getGreen(), blue*c.getBlue(), special);
 }

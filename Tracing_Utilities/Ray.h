@@ -6,7 +6,7 @@
 #define C_RAYTRACER_RAY_H
 
 #include <iostream>
-#include "Vector.h"
+#include "../Math_Utilities/Vector.h"
 
 using namespace std;
 

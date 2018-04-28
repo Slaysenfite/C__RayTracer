@@ -4,7 +4,7 @@
 
 #include <cmath>
 #include "Utilities.h"
-#include "Triangle.h"
+#include "../Geometry_Utilities/Triangle.h"
 
 void Utilities::saveBitmapImage(const char *filename, int w, int h, int dpi, RGBType *data) {
     FILE *f;

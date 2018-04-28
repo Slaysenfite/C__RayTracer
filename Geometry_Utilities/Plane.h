@@ -6,9 +6,9 @@
 #define C_RAYTRACER_PLANE_H
 
 #include <iostream>
-#include "Vector.h"
-#include "Colour.h"
-#include "Ray.h"
+#include "../Math_Utilities/Vector.h"
+#include "../Tracing_Utilities/Colour.h"
+#include "../Tracing_Utilities/Ray.h"
 #include "Geometric_Object.h"
 
 using namespace std;
