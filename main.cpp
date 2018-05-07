@@ -22,6 +22,7 @@ using namespace std;
 int var;
 vector<Geometric_Object*> scene_objects;
 
+const int ANTINALIASING_DEPTH = 2;
 
 void createPolygon(Vector c1, Vector c2, Colour colour) {
     Vector A = Vector(c2.getX(), c1.getY(), c1.getZ());
@@ -63,25 +64,23 @@ Colour getColourAt(Vector intersection_position, Vector intersecting_ray_directi
 
     if (winning_object_Colour.getSpecial() == 2) {
         // checkered/tile floor pattern
-
         int square = (int)floor(intersection_position.getX()) + (int)floor(intersection_position.getZ());
-
+        //set even tile index to black
         if ((square % 2) == 0) {
-            // black tile
             winning_object_Colour.setRed(0);
             winning_object_Colour.setGreen(0);
             winning_object_Colour.setBlue(0);
-        }
+        }//set odd indexed tile white
         else {
-            // white tile
             winning_object_Colour.setRed(1);
             winning_object_Colour.setGreen(1);
             winning_object_Colour.setRed(1);
         }
     }
-
+    //set ambient light
     Colour final_Colour = winning_object_Colour.scalar(ambientlight);
 
+    //Handling reflection
     if (winning_object_Colour.getSpecial() > 0 && winning_object_Colour.getSpecial() <= 1) {
         // reflection from objects with specular intensity
         double dot1 = winning_object_normal.dot(intersecting_ray_direction.negative());
@@ -93,17 +92,19 @@ Colour getColourAt(Vector intersection_position, Vector intersecting_ray_directi
 
         Ray reflection_ray (intersection_position, reflection_direction);
 
-        // determine what the ray intersects with first
+        // find object that intersects with the reflected ray forts (aka secondary object)
         vector<double> reflection_intersections;
 
         for (int reflection_index = 0; reflection_index < scene_objects.size(); reflection_index++) {
+            //add intersections of reflections into intersections array
             reflection_intersections.push_back(scene_objects.at(reflection_index)->findIntersection(reflection_ray));
         }
 
+        //intersection between primary and secondary object
         int index_of_winning_object_with_reflection = util.winningObjectIndex(reflection_intersections);
 
+        //If there are secondary object interactions
         if (index_of_winning_object_with_reflection != -1) {
-            // reflection ray missed everthing else
             if (reflection_intersections.at(index_of_winning_object_with_reflection) > accuracy) {
                 // determine the position and direction at the point of intersection with the reflection ray
                 // the ray only affects the Colour if it reflected off something
@@ -111,13 +112,17 @@ Colour getColourAt(Vector intersection_position, Vector intersecting_ray_directi
                 Vector reflection_intersection_position = intersection_position.add(reflection_direction.scalar(reflection_intersections.at(index_of_winning_object_with_reflection)));
                 Vector reflection_intersection_ray_direction = reflection_direction;
 
+                //Recursive call
+                //reflections require recursion because reflections go off at multiple directions interesting with multiple objects
                 Colour reflection_intersection_Colour = getColourAt(reflection_intersection_position, reflection_intersection_ray_direction, scene_objects, index_of_winning_object_with_reflection, light_sources, accuracy, ambientlight);
 
+                //The final colour gets modified based on the special value assigned
                 final_Colour = final_Colour.add(reflection_intersection_Colour.scalar(winning_object_Colour.getSpecial()));
             }
         }
     }
 
+    //Shadowing
     for (int light_index = 0; light_index < light_sources.size(); light_index++) {
         Vector light_direction = light_sources.at(light_index)->getLightPosition().add(intersection_position.negative()).normalized();
 
@@ -182,7 +187,7 @@ int main() {
     cout << "Rendering image...please wait indefinitely" << endl;
 
     int width = 1200;
-    int height = 800;
+    int height = 720;
 
     /*int width = 1900;
     int height = 1280;*/
@@ -191,6 +196,7 @@ int main() {
     int pixelNum = width*height;
 
     int dpi = 72;
+    bool anti_aliased = true;
 
     RGBType *pixels = new RGBType[pixelNum];
 
@@ -217,8 +223,8 @@ int main() {
     Colour greenish = Colour(0.5, 1.0, 0.5, 0.3);
     Colour brown = Colour(0.7, 0.5, 0.25, 0.2);
     Colour reddish = Colour(0.9, 0.2, 0.2, 0);
-    Colour grey = Colour(0.5, 0.5, 0.5, 0);
-    Colour navy = Colour(0.25, 0.33, 0.67, 0);
+    Colour grey = Colour(0.5, 0.5, 0.5, 0.6);
+    Colour navy = Colour(0.25, 0.33, 0.67, 0.2);
     Colour bluish = Colour(0.15, 0.2, 1, 0);
     Colour light_black = Colour(0, 0, 0, 0);
 
@@ -255,64 +261,119 @@ int main() {
     scene_objects.push_back(dynamic_cast<Geometric_Object*>(&scene_object5));
 
 
-
-
+    int aliasing_index;
     double xOffset, yOffset;
 
     for(int x = 0; x < width; x++){
-        for(int y = 0; y < height; y++){
+        for(int y = 0; y < height; y++) {
 
-            var = x + y*width;
+            var = x + y * width;
 
-            //No anti aliasing
-            if(width > height){
-                xOffset = ((x + 0.5)/width)*aspectRatio - (((width - height)/(double)height)/2);
-                yOffset = ((height - y) + 0.5)/height;
-            }
-            else if (height > width){
-                xOffset = (x + 0.5)/ width;
-                yOffset = (((height - y) + 0.5)/height)/aspectRatio - (((height - width)/(double)width)/2);
-            }
-			else if (width == height){
-                xOffset = (x + 0.5)/width;
-                yOffset = ((height - y) + 0.5)/height;
-			}
+            //Pixel is initially blank
+            double tempRed[ANTINALIASING_DEPTH * ANTINALIASING_DEPTH];
+            double tempGreen[ANTINALIASING_DEPTH * ANTINALIASING_DEPTH];
+            double tempBlue[ANTINALIASING_DEPTH * ANTINALIASING_DEPTH];
 
-            Vector rayOrigin = c.getCameraPosition(); //rays originate from camera position
-            Vector rayDirection = cDir.add(cRight.scalar(xOffset - 0.5)).add(cDown.scalar(yOffset - 0.5)).normalized();
+            for (int aax = 0; aax < ANTINALIASING_DEPTH; aax++) {
+                for (int aay = 0; aay < ANTINALIASING_DEPTH; aay++) {
 
-            Ray ray = Ray(rayOrigin, rayDirection);
+                    aliasing_index = aay*ANTINALIASING_DEPTH+aax;
 
-            vector<double> intersections;
+                    srand(time(0));
 
-            for(int i = 0; i < scene_objects.size(); i++){
-                intersections.push_back(scene_objects.at(i)->findIntersection(ray));
-            }
+                    //a ray is created from the eye to the pixel
+                    if (width > height) {
+                        xOffset = ((x + 0.5) / width) * aspectRatio - (((width - height) / (double) height) / 2);
+                        yOffset = ((height - y) + 0.5) / height;
+                    } else if (height > width) {
+                        xOffset = (x + 0.5) / width;
+                        yOffset = (((height - y) + 0.5) / height) / aspectRatio -
+                                  (((height - width) / (double) width) / 2);
+                    } else if (width == height) {
+                        xOffset = (x + 0.5) / width;
+                        yOffset = ((height - y) + 0.5) / height;
+                    }
+                    else {
+                        //Anti-aliasing
+                        if(anti_aliased) {
+                            if (width > height) {
+                                xOffset = ((x + (double)aax/((double)ANTINALIASING_DEPTH - 1))/width)*aspectRatio - (((width-height)/(double)height)/2);
+                                yOffset = ((height - y) + (double)aax/((double)ANTINALIASING_DEPTH - 1))/height;
+                            }
+                            else if (height > width) {
+                                xOffset = (x + (double)aax/((double)ANTINALIASING_DEPTH - 1))/ width;
+                                yOffset = (((height - y) + (double)aax/((double)ANTINALIASING_DEPTH - 1))/height)/aspectRatio - (((height - width)/(double)width)/2);
+                            }
+                            else {
+                                xOffset = (x + (double)aax/((double)ANTINALIASING_DEPTH - 1))/width;
+                                yOffset = ((height - y) + (double)aax/((double)ANTINALIASING_DEPTH - 1))/height;
+                            }
+                        }
+                    }
 
-            int winningIndex = util.winningObjectIndex(intersections);
+                    Vector rayOrigin = c.getCameraPosition(); //rays originate from camera position
+                    Vector rayDirection = cDir.add(cRight.scalar(xOffset - 0.5)).add(
+                            cDown.scalar(yOffset - 0.5)).normalized();
 
-            if(winningIndex == util.NO_INTERSECTION){
-                pixels[var].r = 0;
-                pixels[var].g = 0;
-                pixels[var].b = 0;
-            }
-            else{
-                if(intersections.at(winningIndex) > util.ACCURACY_CHECK){
-                    Vector intersectionPosition = rayOrigin.add(rayDirection.scalar(intersections.at(winningIndex)));
-                    Vector intersectionRayDirection = rayDirection;
+                    Ray ray = Ray(rayOrigin, rayDirection);
 
-                    Colour intersectionColour = getColourAt(intersectionPosition, intersectionRayDirection, scene_objects,
-                                                           winningIndex, light_sources, util.ACCURACY_CHECK, util.AMBIENT_LIGHT);
+                    vector<double> intersections;
 
-                    pixels[var].r = intersectionColour.getRed();
-                    pixels[var].g = intersectionColour.getGreen();
-                    pixels[var].b = intersectionColour.getBlue();
+                    for (int i = 0; i < scene_objects.size(); i++) {
+                        intersections.push_back(scene_objects.at(i)->findIntersection(ray));
+                    }
+
+                    int winningIndex = util.winningObjectIndex(intersections);
+
+                    if (winningIndex == util.NO_INTERSECTION) {
+                        tempRed[aliasing_index] = 0;
+                        tempGreen[aliasing_index] = 0;
+                        tempBlue[aliasing_index] = 0;
+                    } else {
+                        if (intersections.at(winningIndex) > util.ACCURACY_CHECK) {
+                            Vector intersectionPosition = rayOrigin.add(
+                                    rayDirection.scalar(intersections.at(winningIndex)));
+                            Vector intersectionRayDirection = rayDirection;
+
+                            Colour intersectionColour = getColourAt(intersectionPosition, intersectionRayDirection,
+                                                                    scene_objects,
+                                                                    winningIndex, light_sources, util.ACCURACY_CHECK,
+                                                                    util.AMBIENT_LIGHT);
+
+                            tempRed[aliasing_index] = intersectionColour.getRed();
+                            tempGreen[aliasing_index] = intersectionColour.getGreen();
+                            tempBlue[aliasing_index] = intersectionColour.getBlue();
+                        }
+                    }
                 }
             }
+            double redTotal = 0;
+            double greenTotal = 0;
+            double blueTotal = 0;
+
+            for(int r = 0; r < ANTINALIASING_DEPTH*ANTINALIASING_DEPTH; r++){
+                redTotal += tempRed[r];
+            }
+            for(int g = 0; g < ANTINALIASING_DEPTH*ANTINALIASING_DEPTH; g++){
+                greenTotal += tempGreen[g];
+            }
+            for(int b = 0; b < ANTINALIASING_DEPTH*ANTINALIASING_DEPTH; b++){
+                blueTotal += tempBlue[b];
+            }
+
+            double redAvg = redTotal/(ANTINALIASING_DEPTH*ANTINALIASING_DEPTH);
+            double greenAvg = greenTotal/(ANTINALIASING_DEPTH*ANTINALIASING_DEPTH);
+            double blueAvg = blueTotal/(ANTINALIASING_DEPTH*ANTINALIASING_DEPTH);
+
+            pixels[var].r = redAvg;
+            pixels[var].g = greenAvg;
+            pixels[var].b = blueAvg;
+
+
         }
     }
 
-    util.saveBitmapImage("RayTracedImage.bmp", width, height, dpi, pixels);
+    util.saveBitmapImage("RayTracedImage2.bmp", width, height, dpi, pixels);
 
     const long double sysTimeEnd = time(0);
     long double sysTimeTotal = sysTimeEnd - sysTimeStart;

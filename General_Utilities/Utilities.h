@@ -17,7 +17,7 @@ class Utilities {
 public:
     const int NO_INTERSECTION = -1;
     const double ACCURACY_CHECK = 0.00000001;
-    const double AMBIENT_LIGHT = 0.2;
+    const double AMBIENT_LIGHT = 0.6;
 
     static void saveBitmapImage(const char *filename, int w, int h, int dpi, RGBType *data);
     static int winningObjectIndex(vector<double> intersections);
