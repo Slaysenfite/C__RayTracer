@@ -22,7 +22,7 @@ using namespace std;
 int var;
 vector<Geometric_Object*> scene_objects;
 
-const int ANTINALIASING_DEPTH = 2;
+const int ANTINALIASING_DEPTH = 1;
 
 void createPolygon(Vector c1, Vector c2, Colour colour) {
     Vector A = Vector(c2.getX(), c1.getY(), c1.getZ());
@@ -104,7 +104,7 @@ Colour getColourAt(Vector intersection_position, Vector intersecting_ray_directi
         int index_of_winning_object_with_reflection = util.winningObjectIndex(reflection_intersections);
 
         //If there are secondary object interactions
-        if (index_of_winning_object_with_reflection != -1) {
+        if (index_of_winning_object_with_reflection != util.NO_INTERSECTION) {
             if (reflection_intersections.at(index_of_winning_object_with_reflection) > accuracy) {
                 // determine the position and direction at the point of intersection with the reflection ray
                 // the ray only affects the Colour if it reflected off something
@@ -156,7 +156,7 @@ Colour getColourAt(Vector intersection_position, Vector intersecting_ray_directi
                 final_Colour = final_Colour.add(winning_object_Colour.multiply(light_sources.at(light_index)->getLightColour()).scalar(cosine_angle));
 
                 if (winning_object_Colour.getSpecial() > 0 && winning_object_Colour.getSpecial() <= 1) {
-                    // special [0-1]
+                    // special Range:[0 - 1]
                     double dot1 = winning_object_normal.dot(intersecting_ray_direction.negative());
                     Vector scalar1 = winning_object_normal.scalar(dot1);
                     Vector add1 = scalar1.add(intersecting_ray_direction);
@@ -183,22 +183,19 @@ int main() {
     const long double sysTimeStart = time(0);
 
     Utilities util = Utilities();
-    //Scene scene = Scene();
     cout << "Rendering image...please wait indefinitely" << endl;
 
-    int width = 1200;
-    int height = 720;
-
-    /*int width = 1900;
-    int height = 1280;*/
-
-    double aspectRatio = (double)width/(double)height;
-    int pixelNum = width*height;
+    int width = 640;
+    int height = 480;
 
     int dpi = 72;
-    bool anti_aliased = true;
 
-    RGBType *pixels = new RGBType[pixelNum];
+    int nPixels = width*height;
+    RGBType *pixels = new RGBType[nPixels];
+
+    int ANTINALIASING_DEPTH = 3;
+    double aathreshold = 0.1;
+    double aspectratio = (double)width/(double)height;
 
     Vector cPos = Vector(3, 1.5, -4);
 
@@ -218,135 +215,152 @@ int main() {
     Camera c = Camera(cPos, cDir, cRight, cDown);
 
     //colours
-    Colour light_white = Colour(1, 1, 1, 0);
-    Colour light_red = Colour(1, 0, 0, 0);
-    Colour greenish = Colour(0.5, 1.0, 0.5, 0.3);
+
     Colour brown = Colour(0.7, 0.5, 0.25, 0.2);
-    Colour reddish = Colour(0.9, 0.2, 0.2, 0);
-    Colour grey = Colour(0.5, 0.5, 0.5, 0.6);
+    Colour yelloish = Colour(0.9, 0.85, 0.2, 0.8);
+    Colour grey = Colour(0.5, 0.5, 0.5, 0.8);
     Colour navy = Colour(0.25, 0.33, 0.67, 0.2);
     Colour bluish = Colour(0.15, 0.2, 1, 0);
     Colour light_black = Colour(0, 0, 0, 0);
 
     Colour white_light (1.0, 1.0, 1.0, 0);
-    Colour red (1, 0, 0, 0);
-    Colour green (0, 1, 0, 0);
+    Colour white (1.0, 1.0, 1.0, 0.9);
+    Colour red (1, 0, 0, 0.9);
     Colour blue (0, 0, 1, 0);
-    Colour pretty_green (0.5, 1.0, 0.5, 0.3);
+    Colour green (0.2, 1.0, 0.3, 0.6);
     Colour maroon (0.7, 0.5, 0.25, 0.2);
     Colour tile_floor (1, 1, 1, 2);
-    Colour gray (0.5, 0.5, 0.5, 0);
-    Colour black (0.0, 0.0, 0.0, 0);
-    Colour light_greenish = Colour(100/255, 155/255, 80/255, 0.3);
-    Colour light_bloodred = Colour(155/255, 8/255, 8/255, 0);
+    Colour black (0.0, 0.0, 0.0, 0.7);
 
-    Vector light_position (4, 2, -1);
+    Vector light_position (-7,10,-1);
     Light scene_light (light_position, white_light);
     vector<Light_Source*> light_sources;
     light_sources.push_back(dynamic_cast<Light_Source*>(&scene_light));
 
     // scene objects
-    Sphere scene_object2 = Sphere(Vector(-2, 0.5, 0), 1, maroon);
-    Sphere scene_object3 = Sphere(O, 1, pretty_green);
-    Sphere scene_object4 = Sphere(Vector(+2, 2, -1), 0.25, white_light);
-    Triangle scene_object5 = Triangle(Vector(-0.5, 0, 5), Vector(4, 0, 2), Vector(2.5, 3, 2), brown);
-
+    Sphere scene_sphere (O, 1, yelloish);
+    Sphere scene_sphere2 (Vector(-3, 0.5, 1), 0.5, black);
     Plane scene_plane (Y, -1, tile_floor);
+    Triangle scene_triangle1 = Triangle(Vector(-0.5, 0, 5), Vector(4, 0, 2), Vector(2.5, 3, 2), brown);
+
     vector<Geometric_Object*> scene_objects;
 
+
+    scene_objects.push_back(dynamic_cast<Geometric_Object*>(&scene_sphere));
+    scene_objects.push_back(dynamic_cast<Geometric_Object*>(&scene_sphere2));
     scene_objects.push_back(dynamic_cast<Geometric_Object*>(&scene_plane));
-    scene_objects.push_back(dynamic_cast<Geometric_Object*>(&scene_object2));
+    scene_objects.push_back(dynamic_cast<Geometric_Object*>(&scene_triangle1));
+
+
+    // scene objects
+    /*Sphere scene_object2 = Sphere(X, 0.15, navy);
+    Sphere scene_object3 = Sphere(Y, 0.15, green);
+    Sphere scene_object4 = Sphere(Z, 0.15, red);
+    Sphere scene_object5 = Sphere(X.negative(), 0.15, white);
+    Sphere scene_object6 = Sphere(Y.negative(), 0.15, gray);
+    Sphere scene_object7 = Sphere(Z.negative(), 0.15, yelloish);*/
+
+
+    Sphere scene_object2 = Sphere(X.add(Vector(5, 3, 2)), 1, navy);
+
+    //scene_objects.push_back(dynamic_cast<Geometric_Object*>(&scene_plane));
+    /*scene_objects.push_back(dynamic_cast<Geometric_Object*>(&p1));
+    scene_objects.push_back(dynamic_cast<Geometric_Object*>(&p2));
+    scene_objects.push_back(dynamic_cast<Geometric_Object*>(&sphere));*/
+
+
+    /*scene_objects.push_back(dynamic_cast<Geometric_Object*>(&scene_object2));
     scene_objects.push_back(dynamic_cast<Geometric_Object*>(&scene_object3));
-    //scene_objects.push_back(dynamic_cast<Geometric_Object*>(&scene_object4));
+    scene_objects.push_back(dynamic_cast<Geometric_Object*>(&scene_object4));
     scene_objects.push_back(dynamic_cast<Geometric_Object*>(&scene_object5));
+    scene_objects.push_back(dynamic_cast<Geometric_Object*>(&scene_object6));
+    scene_objects.push_back(dynamic_cast<Geometric_Object*>(&scene_object7));*/
 
 
-    int aliasing_index;
+    int var, iAA;
     double xOffset, yOffset;
 
-    for(int x = 0; x < width; x++){
-        for(int y = 0; y < height; y++) {
-
-            var = x + y * width;
-
+    for (int x = 0; x < width; x++) {
+        for (int y = 0; y < height; y++) {
+            var = y*width + x;
             //Pixel is initially blank
-            double tempRed[ANTINALIASING_DEPTH * ANTINALIASING_DEPTH];
-            double tempGreen[ANTINALIASING_DEPTH * ANTINALIASING_DEPTH];
-            double tempBlue[ANTINALIASING_DEPTH * ANTINALIASING_DEPTH];
+            double tempRed[ANTINALIASING_DEPTH*ANTINALIASING_DEPTH];
+            double tempGreen[ANTINALIASING_DEPTH*ANTINALIASING_DEPTH];
+            double tempBlue[ANTINALIASING_DEPTH*ANTINALIASING_DEPTH];
 
-            for (int aax = 0; aax < ANTINALIASING_DEPTH; aax++) {
-                for (int aay = 0; aay < ANTINALIASING_DEPTH; aay++) {
+            for (int xAA = 0; xAA < ANTINALIASING_DEPTH; xAA++) {
+                for (int yAA = 0; yAA < ANTINALIASING_DEPTH; yAA++) {
 
-                    aliasing_index = aay*ANTINALIASING_DEPTH+aax;
+                    iAA = yAA*ANTINALIASING_DEPTH + xAA;
 
                     srand(time(0));
 
-                    //a ray is created from the eye to the pixel
-                    if (width > height) {
-                        xOffset = ((x + 0.5) / width) * aspectRatio - (((width - height) / (double) height) / 2);
-                        yOffset = ((height - y) + 0.5) / height;
-                    } else if (height > width) {
-                        xOffset = (x + 0.5) / width;
-                        yOffset = (((height - y) + 0.5) / height) / aspectRatio -
-                                  (((height - width) / (double) width) / 2);
-                    } else if (width == height) {
-                        xOffset = (x + 0.5) / width;
-                        yOffset = ((height - y) + 0.5) / height;
+                    // Shoot ray from camer to the pixel
+                    if (ANTINALIASING_DEPTH == 1) {
+                        if (width > height) {
+                            xOffset = ((x+0.5)/width)*aspectratio - (((width-height)/(double)height)/2);
+                            yOffset = ((height - y) + 0.5)/height;
+                        }
+                        else if (height > width) {
+                            xOffset = (x + 0.5)/ width;
+                            yOffset = (((height - y) + 0.5)/height)/aspectratio - (((height - width)/(double)width)/2);
+                        }
+                        else {
+                            xOffset = (x + 0.5)/width;
+                            yOffset = ((height - y) + 0.5)/height;
+                        }
                     }
                     else {
-                        //Anti-aliasing
-                        if(anti_aliased) {
-                            if (width > height) {
-                                xOffset = ((x + (double)aax/((double)ANTINALIASING_DEPTH - 1))/width)*aspectRatio - (((width-height)/(double)height)/2);
-                                yOffset = ((height - y) + (double)aax/((double)ANTINALIASING_DEPTH - 1))/height;
-                            }
-                            else if (height > width) {
-                                xOffset = (x + (double)aax/((double)ANTINALIASING_DEPTH - 1))/ width;
-                                yOffset = (((height - y) + (double)aax/((double)ANTINALIASING_DEPTH - 1))/height)/aspectRatio - (((height - width)/(double)width)/2);
-                            }
-                            else {
-                                xOffset = (x + (double)aax/((double)ANTINALIASING_DEPTH - 1))/width;
-                                yOffset = ((height - y) + (double)aax/((double)ANTINALIASING_DEPTH - 1))/height;
-                            }
+                        if (width > height) {
+                            xOffset = ((x + (double)xAA/((double)ANTINALIASING_DEPTH - 1))/width)*aspectratio - (((width-height)/(double)height)/2);
+                            yOffset = ((height - y) + (double)xAA/((double)ANTINALIASING_DEPTH - 1))/height;
+                        }
+                        else if (height > width) {
+                            xOffset = (x + (double)xAA/((double)ANTINALIASING_DEPTH - 1))/ width;
+                            yOffset = (((height - y) + (double)xAA/((double)ANTINALIASING_DEPTH - 1))/height)/aspectratio - (((height - width)/(double)width)/2);
+                        }
+                        else {
+                            xOffset = (x + (double)xAA/((double)ANTINALIASING_DEPTH - 1))/width;
+                            yOffset = ((height - y) + (double)xAA/((double)ANTINALIASING_DEPTH - 1))/height;
                         }
                     }
 
-                    Vector rayOrigin = c.getCameraPosition(); //rays originate from camera position
-                    Vector rayDirection = cDir.add(cRight.scalar(xOffset - 0.5)).add(
-                            cDown.scalar(yOffset - 0.5)).normalized();
+                    Vector cam_ray_origin = c.getCameraPosition();
+                    Vector cam_ray_direction = cDir.add(cRight.scalar(xOffset - 0.5).add(cDown.scalar(yOffset - 0.5))).normalized();
 
-                    Ray ray = Ray(rayOrigin, rayDirection);
+                    Ray cam_ray (cam_ray_origin, cam_ray_direction);
 
                     vector<double> intersections;
 
-                    for (int i = 0; i < scene_objects.size(); i++) {
-                        intersections.push_back(scene_objects.at(i)->findIntersection(ray));
+                    for (int index = 0; index < scene_objects.size(); index++) {
+                        intersections.push_back(scene_objects.at(index)->findIntersection(cam_ray));
                     }
 
-                    int winningIndex = util.winningObjectIndex(intersections);
+                    int index_of_winning_object = util.winningObjectIndex(intersections);
 
-                    if (winningIndex == util.NO_INTERSECTION) {
-                        tempRed[aliasing_index] = 0;
-                        tempGreen[aliasing_index] = 0;
-                        tempBlue[aliasing_index] = 0;
-                    } else {
-                        if (intersections.at(winningIndex) > util.ACCURACY_CHECK) {
-                            Vector intersectionPosition = rayOrigin.add(
-                                    rayDirection.scalar(intersections.at(winningIndex)));
-                            Vector intersectionRayDirection = rayDirection;
+                    if (index_of_winning_object == util.NO_INTERSECTION) {
+                        // blank pixel
+                        tempRed[iAA] = 0;
+                        tempGreen[iAA] = 0;
+                        tempBlue[iAA] = 0;
+                    }
+                    else{
+                        if (intersections.at(index_of_winning_object) > util.ACCURACY_CHECK) {
 
-                            Colour intersectionColour = getColourAt(intersectionPosition, intersectionRayDirection,
-                                                                    scene_objects,
-                                                                    winningIndex, light_sources, util.ACCURACY_CHECK,
-                                                                    util.AMBIENT_LIGHT);
+                            Vector intersection_position = cam_ray_origin.add(cam_ray_direction.scalar(intersections.at(index_of_winning_object)));
+                            Vector intersecting_ray_direction = cam_ray_direction;
 
-                            tempRed[aliasing_index] = intersectionColour.getRed();
-                            tempGreen[aliasing_index] = intersectionColour.getGreen();
-                            tempBlue[aliasing_index] = intersectionColour.getBlue();
+                            Colour intersection_color = getColourAt(intersection_position, intersecting_ray_direction, scene_objects,
+                                                                    index_of_winning_object, light_sources, util.ACCURACY_CHECK, util.AMBIENT_LIGHT);
+
+                            tempRed[iAA] = intersection_color.getRed();
+                            tempGreen[iAA] = intersection_color.getGreen();
+                            tempBlue[iAA] = intersection_color.getBlue();
                         }
                     }
                 }
             }
+
             double redTotal = 0;
             double greenTotal = 0;
             double blueTotal = 0;
@@ -361,15 +375,13 @@ int main() {
                 blueTotal += tempBlue[b];
             }
 
-            double redAvg = redTotal/(ANTINALIASING_DEPTH*ANTINALIASING_DEPTH);
-            double greenAvg = greenTotal/(ANTINALIASING_DEPTH*ANTINALIASING_DEPTH);
-            double blueAvg = blueTotal/(ANTINALIASING_DEPTH*ANTINALIASING_DEPTH);
+            double avgRed = redTotal/(ANTINALIASING_DEPTH*ANTINALIASING_DEPTH);
+            double avgGreen = greenTotal/(ANTINALIASING_DEPTH*ANTINALIASING_DEPTH);
+            double avgBlue = blueTotal/(ANTINALIASING_DEPTH*ANTINALIASING_DEPTH);
 
-            pixels[var].r = redAvg;
-            pixels[var].g = greenAvg;
-            pixels[var].b = blueAvg;
-
-
+            pixels[var].r = avgRed;
+            pixels[var].g = avgGreen;
+            pixels[var].b = avgBlue;
         }
     }
 
