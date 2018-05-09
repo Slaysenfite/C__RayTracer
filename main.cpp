@@ -19,10 +19,14 @@
 
 using namespace std;
 
-int var;
+bool antialising = false;
 vector<Geometric_Object*> scene_objects;
 
-const int ANTINALIASING_DEPTH = 1;
+double fRand(double fMin, double fMax)
+{
+    double f = (double)rand() / RAND_MAX;
+    return fMin + f * (fMax - fMin);
+}
 
 void createPolygon(Vector c1, Vector c2, Colour colour) {
     Vector A = Vector(c2.getX(), c1.getY(), c1.getZ());
@@ -62,8 +66,8 @@ Colour getColourAt(Vector intersection_position, Vector intersecting_ray_directi
     Colour winning_object_Colour = scene_objects.at(index_of_winning_object)->getColour();
     Vector winning_object_normal = scene_objects.at(index_of_winning_object)->getNormalAt(intersection_position);
 
+    //CHECKERED FLOOR PATTERN
     if (winning_object_Colour.getSpecial() == 2) {
-        // checkered/tile floor pattern
         int square = (int)floor(intersection_position.getX()) + (int)floor(intersection_position.getZ());
         //set even tile index to black
         if ((square % 2) == 0) {
@@ -123,8 +127,8 @@ Colour getColourAt(Vector intersection_position, Vector intersecting_ray_directi
     }
 
     //Shadowing
-    for (int light_index = 0; light_index < light_sources.size(); light_index++) {
-        Vector light_direction = light_sources.at(light_index)->getLightPosition().add(intersection_position.negative()).normalized();
+    for (int iLight = 0; iLight < light_sources.size(); iLight++) {
+        Vector light_direction = light_sources.at(iLight)->getLightPosition().add(intersection_position.negative()).normalized();
 
         float cosine_angle = winning_object_normal.dot(light_direction);
 
@@ -132,10 +136,10 @@ Colour getColourAt(Vector intersection_position, Vector intersecting_ray_directi
             // test for shadows
             bool shadowed = false;
 
-            Vector distance_to_light = light_sources.at(light_index)->getLightPosition().add(intersection_position.negative()).normalized();
+            Vector distance_to_light = light_sources.at(iLight)->getLightPosition().add(intersection_position.negative()).normalized();
             float distance_to_light_magnitude = distance_to_light.magnitude();
 
-            Ray shadow_ray (intersection_position, light_sources.at(light_index)->getLightPosition().add(intersection_position.negative()).normalized());
+            Ray shadow_ray (intersection_position, light_sources.at(iLight)->getLightPosition().add(intersection_position.negative()).normalized());
 
             vector<double> secondary_intersections;
 
@@ -152,8 +156,8 @@ Colour getColourAt(Vector intersection_position, Vector intersecting_ray_directi
                 }
             }
 
-            if (shadowed == false) {
-                final_Colour = final_Colour.add(winning_object_Colour.multiply(light_sources.at(light_index)->getLightColour()).scalar(cosine_angle));
+            if (1shadowed) {
+                final_Colour = final_Colour.add(winning_object_Colour.multiply(light_sources.at(iLight)->getLightColour()).scalar(cosine_angle));
 
                 if (winning_object_Colour.getSpecial() > 0 && winning_object_Colour.getSpecial() <= 1) {
                     // special Range:[0 - 1]
@@ -167,7 +171,7 @@ Colour getColourAt(Vector intersection_position, Vector intersecting_ray_directi
                     double specular = reflection_direction.dot(light_direction);
                     if (specular > 0) {
                         specular = pow(specular, 10);
-                        final_Colour = final_Colour.add(light_sources.at(light_index)->getLightColour().scalar(specular*winning_object_Colour.getSpecial()));
+                        final_Colour = final_Colour.add(light_sources.at(iLight)->getLightColour().scalar(specular*winning_object_Colour.getSpecial()));
                     }
                 }
 
@@ -185,8 +189,11 @@ int main() {
     Utilities util = Utilities();
     cout << "Rendering image...please wait indefinitely" << endl;
 
-    int width = 640;
-    int height = 480;
+    int width = 1920;
+    int height = 1280;
+
+    /*int width = 640;
+    int height = 480;*/
 
     int dpi = 72;
 
@@ -295,19 +302,19 @@ int main() {
 
                     srand(time(0));
 
-                    // Shoot ray from camer to the pixel
-                    if (ANTINALIASING_DEPTH == 1) {
+                    // Shoot ray from camera to the pixel
+                    if (!antialising) {
                         if (width > height) {
-                            xOffset = ((x+0.5)/width)*aspectratio - (((width-height)/(double)height)/2);
-                            yOffset = ((height - y) + 0.5)/height;
+                            xOffset = ((x + fRand(0, ANTINALIASING_DEPTH)/((double)ANTINALIASING_DEPTH - 1))/width)*aspectratio - (((width-height)/(double)height)/2);
+                            yOffset = ((height - y) + fRand(0, ANTINALIASING_DEPTH)/((double)ANTINALIASING_DEPTH - 1))/height;
                         }
                         else if (height > width) {
-                            xOffset = (x + 0.5)/ width;
-                            yOffset = (((height - y) + 0.5)/height)/aspectratio - (((height - width)/(double)width)/2);
+                            xOffset = (x + fRand(0, ANTINALIASING_DEPTH)/((double)ANTINALIASING_DEPTH - 1))/ width;
+                            yOffset = (((height - y) + fRand(0, ANTINALIASING_DEPTH)/((double)ANTINALIASING_DEPTH - 1))/height)/aspectratio - (((height - width)/(double)width)/2);
                         }
                         else {
-                            xOffset = (x + 0.5)/width;
-                            yOffset = ((height - y) + 0.5)/height;
+                            xOffset = (x + fRand(0, ANTINALIASING_DEPTH)/((double)ANTINALIASING_DEPTH - 1))/width;
+                            yOffset = ((height - y) + fRand(0, ANTINALIASING_DEPTH)/((double)ANTINALIASING_DEPTH - 1))/height;
                         }
                     }
                     else {
